@@ -50,31 +50,62 @@ CREATE TABLE IF NOT EXISTS metric_log_mappings (
 ORDER BY (id, org_id, metric_id, log_stream_id)
 PRIMARY KEY (id);
 
+-- Materialized view for fast hover queries
+-- Pre-joins metric and log stream data for instant lookups
+CREATE MATERIALIZED VIEW IF NOT EXISTS metric_log_hover_mv
+ENGINE = MergeTree()
+ORDER BY (org_id, dashboard_name, panel_title, metric_name, log_stream_id)
+POPULATE
+AS
+SELECT
+    mm.org_id,
+    m.dashboard_name,
+    m.panel_title,
+    m.metric_name,
+    ls.id as log_stream_id,
+    ls.service,
+    ls.region,
+    ls.log_stream_name,
+    mm.created_at,
+    mm.is_active
+FROM metric_log_mappings mm FINAL
+JOIN metrics m FINAL ON mm.metric_id = m.id
+JOIN log_streams ls FINAL ON mm.log_stream_id = ls.id;
+
 -- Example queries:
 
--- 1. Get all active mappings with full details
+-- 1. Get all log streams for a metric (hover query)
 -- SELECT
---     o.name,
---     m.dashboard_name,
---     m.panel_title,
---     m.metric_name,
---     ls.service,
---     ls.region,
---     ls.log_stream_name,
---     mm.created_at
--- FROM metric_log_mappings mm FINAL
--- JOIN organizations o ON mm.org_id = o.id
--- JOIN metrics m ON mm.metric_id = m.id
--- JOIN log_streams ls ON mm.log_stream_id = ls.id
--- WHERE mm.is_active = 1
--- ORDER BY mm.created_at DESC;
+--     log_stream_id,
+--     service,
+--     region,
+--     log_stream_name
+-- FROM metric_log_hover_mv
+-- WHERE org_id = 'org123'
+--   AND dashboard_name = 'main-dashboard'
+--   AND panel_title = 'CPU Usage'
+--   AND metric_name = 'cpu_percent'
+--   AND is_active = 1;
 
--- 2. Get mapping count by organization
+-- 2. Get all active mappings with full details
 -- SELECT
---     o.name,
+--     org_id,
+--     dashboard_name,
+--     panel_title,
+--     metric_name,
+--     service,
+--     region,
+--     log_stream_name,
+--     created_at
+-- FROM metric_log_hover_mv
+-- WHERE is_active = 1
+-- ORDER BY created_at DESC;
+
+-- 3. Get mapping count by organization
+-- SELECT
+--     org_id,
 --     count(*) as total_mappings
--- FROM metric_log_mappings mm FINAL
--- JOIN organizations o ON mm.org_id = o.id
--- WHERE mm.is_active = 1
--- GROUP BY o.name
+-- FROM metric_log_hover_mv
+-- WHERE is_active = 1
+-- GROUP BY org_id
 -- ORDER BY total_mappings DESC;
