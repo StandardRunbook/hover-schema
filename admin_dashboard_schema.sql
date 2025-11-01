@@ -68,9 +68,9 @@ SELECT
     ls.log_stream_name,
     mm.created_at,
     mm.is_active
-FROM metric_log_mappings mm FINAL
-JOIN metrics m FINAL ON mm.metric_id = m.id
-JOIN log_streams ls FINAL ON mm.log_stream_id = ls.id;
+FROM metric_log_mappings mm
+JOIN metrics m ON mm.metric_id = m.id
+JOIN log_streams ls ON mm.log_stream_id = ls.id;
 
 -- Example queries:
 
