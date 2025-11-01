@@ -58,16 +58,16 @@ ORDER BY (org_id, dashboard_name, panel_title, metric_name, log_stream_id)
 POPULATE
 AS
 SELECT
-    mm.org_id,
-    m.dashboard_name,
-    m.panel_title,
-    m.metric_name,
-    ls.id as log_stream_id,
-    ls.service,
-    ls.region,
-    ls.log_stream_name,
-    mm.created_at,
-    mm.is_active
+    mm.org_id AS org_id,
+    m.dashboard_name AS dashboard_name,
+    m.panel_title AS panel_title,
+    m.metric_name AS metric_name,
+    ls.id AS log_stream_id,
+    ls.service AS service,
+    ls.region AS region,
+    ls.log_stream_name AS log_stream_name,
+    mm.created_at AS created_at,
+    mm.is_active AS is_active
 FROM metric_log_mappings mm
 JOIN metrics m ON mm.metric_id = m.id
 JOIN log_streams ls ON mm.log_stream_id = ls.id;
