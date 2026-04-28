@@ -39,19 +39,10 @@ PARTITION BY org_id
 ORDER BY (org_id, log_stream_id, template_id);
 
 
--- Table 3: template_examples
--- Stores representative example logs for each template in each log stream
-CREATE TABLE IF NOT EXISTS template_examples
-(
-    org_id String,                   -- Organization identifier
-    log_stream_id String,            -- Log stream identifier
-    service String,                  -- Service name
-    region String,                   -- Region
-    template_id String,              -- ID of the template
-    message String,                  -- Representative log message example
-    timestamp DateTime64(3),         -- When this example was captured
-    INDEX idx_template (org_id, log_stream_id, template_id) TYPE bloom_filter GRANULARITY 4
-)
-ENGINE = MergeTree()
-PARTITION BY org_id
-ORDER BY (org_id, log_stream_id, template_id, timestamp);
+-- (template_examples table removed: sampled "representative" examples
+-- conflicted with the hover-content invariant that hover queries must
+-- show the actual log entries from the inspected (template_id,
+-- time_window) slice, not a random sample drawn across time.)
+
+-- Drop the table from any existing deployment:
+DROP TABLE IF EXISTS template_examples;
